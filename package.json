@@ -6,8 +6,6 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "@types/bcrypt": "^5.0.0",
-    "bcrypt": "^5.1.0",
     "elysia": "latest",
     "postgres": "^3.3.5"
   },

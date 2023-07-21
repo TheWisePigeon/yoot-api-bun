@@ -1,8 +1,7 @@
-import { Elysia, Handler } from "elysia";
+import { Elysia } from "elysia";
 import { HttpResponse, ApiKey } from "./utils";
 import { API_KEY_PREFIX } from "./config";
 import sql from "./db";
-import bcrypt from "bcrypt"
 
 const app = new Elysia()
 
