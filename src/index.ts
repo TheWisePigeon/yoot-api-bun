@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { HttpResponse, ApiKey } from "./utils";
 import { API_KEY_PREFIX } from "./config";
 import sql from "./db";
+import entities_v1 from "./v1/Entities";
 
 const app = new Elysia()
 
@@ -33,9 +34,7 @@ app.group(
         return HttpResponse(500)
       }
     })
-    .post('/entities', ({ store })=>{
-      return HttpResponse()
-    })
+    .use(entities_v1)
 )
 
 app.listen(3000)
