@@ -37,7 +37,10 @@ app.group(
     .use(entities_v1)
 )
 
-app.listen(3000)
+app.listen(3000, async()=>{
+  const version = await sql` select version() `
+  console.log(version)
+})
 
 console.log(
   ` Elysia is running at ${app.server?.hostname}:${app.server?.port}`
