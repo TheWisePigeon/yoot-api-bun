@@ -4,6 +4,7 @@ import { HttpResponse, ApiKey } from "./utils";
 import { API_KEY_PREFIX } from "./config";
 import sql from "./db";
 import entities_v1 from "./v1/Entities";
+import entries_v1 from "./v1/Entries";
 
 const app = new Elysia()
 
@@ -42,6 +43,7 @@ app.group(
       }
     })
     .use(entities_v1)
+    .use(entries_v1)
 )
 
 app.listen(3000, async () => {
