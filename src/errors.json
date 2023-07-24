@@ -1,0 +1,6 @@
+{
+  "ERR_MISSING_KEY":"API key is missing in the Authorization header",
+  "ERR_INVALID_KEY":"API key is invalid",
+  "ERR_MISSING_PERMISSION":"API key is not authorized to perform this action",
+  "ERR":""
+}
