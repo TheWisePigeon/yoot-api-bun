@@ -1,10 +1,17 @@
 import { Elysia } from "elysia";
+import { cors } from "@elysiajs/cors"
 import { HttpResponse, ApiKey } from "./utils";
 import { API_KEY_PREFIX } from "./config";
 import sql from "./db";
 import entities_v1 from "./v1/Entities";
 
 const app = new Elysia()
+
+app.use(cors())
+
+app.get('/health', ()=>{
+  return HttpResponse(200)
+})
 
 app.group(
   '/v1', app => app
