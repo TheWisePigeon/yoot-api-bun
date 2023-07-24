@@ -31,16 +31,11 @@ export const Types = ["Text", "Number", "Boolean", "Image"]
 
 export function entity_data_is_valid(fields: string[], types: string[]) {
   if (fields.length === 0 || types.length === 0) return {
-    status: false, message: "An entity can not have an empty schema"
-  }
-  if (
-    (new Set(fields)).size !== fields.length
-  ) return {
-    status: false, message: "An entity can not have two fields of the same name"
+    status: false, message: "ERR_EMPTY_SCHEMA"
   }
   const invalid_type = types.find(field_type => !Types.includes(field_type))
   if (invalid_type) return {
-    status: false, message: `Invalid or unsupported type ${invalid_type}`
+    status: false, message: "ERR_INVALID_DATA_TYPE"
   }
   return {
     status: true, message: ""

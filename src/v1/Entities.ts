@@ -26,7 +26,7 @@ const entities_v1 = (app: Elysia) => app
   .post('/entities', async ({ store, body, request }) => {
     try {
       const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
-      if(content_type!=="multipart/form-data"){
+      if (content_type !== "multipart/form-data") {
         return HttpResponse(415, "ERR_CONT_TYPE")
       }
       if (TypeParse(body, z.object({ name: z.string(), schema: z.string() }))) {
@@ -43,19 +43,20 @@ const entities_v1 = (app: Elysia) => app
         if (name === "") return HttpResponse(400, "ERR_EMPTY_NAME")
         let parsed_schema: Record<string, string>
         parsed_schema = JSON.parse(schema) as Record<string, string>
-        let [fields, types] = Object.entries(parsed_schema)
+        let fields = Object.keys(parsed_schema)
+        let types = Object.values(parsed_schema)
         const { status, message } = entity_data_is_valid(fields, types)
         if (!status) return HttpResponse(400, message)
         await sql`
-        insert into entity(name, project, schema)
-        values(${name}, ${""}, ${schema})
-      `
+          insert into entity(name, project, schema)
+          values(${name}, ${project}, ${schema})
+        `
         return HttpResponse(201)
-
       } else {
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
     } catch (err) {
+      console.log(err)
       if (err instanceof Error) {
         if (err.name === "SyntaxError") {
           return HttpResponse(400, "ERR_BAD_SCHEMA")
