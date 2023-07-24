@@ -66,5 +66,39 @@ const entities_v1 = (app: Elysia) => app
       return HttpResponse(500)
     }
   })
+  .put('/entities/:name', async ({ store, body, request, params }) => {
+    try {
+      const { name } = params
+      if(name===""){
+        return HttpResponse(400, "ERR_BAD_REQUEST")
+      }
+      const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
+      if (content_type !== "multipart/form-data") {
+        return HttpResponse(415, "ERR_CONT_TYPE")
+      }
+      const { api_key:{ permissions, project }} = store
+      const parsed_permissions = JSON.parse(permissions) as Permission
+      if(!parsed_permissions.write_permission){
+        return HttpResponse(403, "ERR_WRITE_PERMISSION")
+      }
+      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${name} and project=${project}`
+      if(!targetted_entity){
+        return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
+      }
+      if (TypeParse(body, z.object({ name: z.string() }))) {
+        const [potential_duplicate] = await sql` select name from entity where name=${body.name} and project=${project}`
+        if(potential_duplicate){
+          return HttpResponse(409, "ERR_CONFLICT")
+        }
+        await sql` update entity set name=${body.name} where id=${targetted_entity.id}`
+        return HttpResponse(200)
+      } else {
+        return HttpResponse(400, "ERR_BAD_REQUEST")
+      }
+    } catch (err) {
+      console.log(`Error while updating entity ${err}`)
+      return HttpResponse(500)
+    }
+  })
 
 export default entities_v1
