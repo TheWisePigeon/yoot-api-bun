@@ -16,7 +16,7 @@ const entities_v1 = (app: Elysia) => app
       const entities = await sql` select * from entity where project=${project}`
       return HttpResponse(
         200,
-        JSON.stringify({ entities })
+        JSON.stringify({ data: entities })
       )
     } catch (err) {
       console.log(`Error while getting list of entities ${err}`)
@@ -49,7 +49,7 @@ const entities_v1 = (app: Elysia) => app
         if (!status) return HttpResponse(400, message)
         await sql`
           insert into entity(name, project, schema)
-          values(${name}, ${project}, ${schema})
+          values(${name}, ${project}, ${sql.json(parsed_schema)})
         `
         return HttpResponse(201)
       } else {
