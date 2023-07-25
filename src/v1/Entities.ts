@@ -65,10 +65,10 @@ const entities_v1 = (app: Elysia) => app
       return HttpResponse(500)
     }
   })
-  .put('/entities/:name', async ({ store, body, request, params }) => {
+  .put('/entities/:entity_name', async ({ store, body, request, params }) => {
     try {
-      const { name } = params
-      if(name===""){
+      const { entity_name } = params
+      if(entity_name===""){
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
       const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
@@ -80,7 +80,7 @@ const entities_v1 = (app: Elysia) => app
       if(!parsed_permissions.write_permission){
         return HttpResponse(403, "ERR_WRITE_PERMISSION")
       }
-      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${name} and project=${project}`
+      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${entity_name} and project=${project}`
       if(!targetted_entity){
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }
@@ -99,10 +99,10 @@ const entities_v1 = (app: Elysia) => app
       return HttpResponse(500)
     }
   })
-  .delete('/entities/:name', async ({ store, request, params })=>{
+  .delete('/entities/:entity_name', async ({ store, request, params })=>{
     try {
-      const { name } = params
-      if(name===""){
+      const { entity_name } = params
+      if(entity_name===""){
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
       const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
@@ -114,7 +114,7 @@ const entities_v1 = (app: Elysia) => app
       if(!parsed_permissions.write_permission){
         return HttpResponse(403, "ERR_WRITE_PERMISSION")
       }
-      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${name} and project=${project}`
+      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${entity_name} and project=${project}`
       if(!targetted_entity){
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }

@@ -9,14 +9,14 @@ const setup = (app: Elysia) => app
 
 const entries_v1 = (app: Elysia) => app
   .use(setup)
-  .get('/entities/:entity/entries', async ({ params, store })=>{
+  .get('/entities/:entity_name/entries', async ({ params, store })=>{
     try {
       const { api_key:{ project }} = store
-      const { entity } = params
-      if(entity===""){
+      const { entity_name } = params
+      if(entity_name===""){
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
-      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${entity} and project=${project}`
+      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${entity_name} and project=${project}`
       if(!targetted_entity){
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }
@@ -32,7 +32,7 @@ const entries_v1 = (app: Elysia) => app
       return HttpResponse(500)
     }
   })
-  .delete('/entities/:entity/entries/:entry', async ({ params, store, request })=>{
+  .delete('/entities/:entity_name/entries/:entry', async ({ params, store, request })=>{
     try {
       const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
       if (content_type !== "multipart/form-data") {
@@ -43,11 +43,11 @@ const entries_v1 = (app: Elysia) => app
       if(!parsed_permissions.delete_permission){
         return HttpResponse(403, "ERR_DELETE_PERMISSION")
       }
-      const { entity, entry } = params
-      if(entity==="" || entry===""){
+      const { entity_name, entry } = params
+      if(entity_name==="" || entry===""){
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
-      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${entity} and project=${project}`
+      const [targetted_entity] = await sql<{id:string}[]>` select id from entity where name=${entity_name} and project=${project}`
       if(!targetted_entity){
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }
@@ -57,7 +57,7 @@ const entries_v1 = (app: Elysia) => app
       return HttpResponse(500)
     }
   })
-  .post('/entities/:entity/entries', async ({ params, store, body, request })=>{
+  .post('/entities/:entity_name/entries', async ({ params, store, body, request })=>{
     try {
       const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
       if (content_type !== "multipart/form-data") {
@@ -68,11 +68,11 @@ const entries_v1 = (app: Elysia) => app
       if(!parsed_permissions.create_permission){
         return HttpResponse(403, "ERR_CREATE_PERMISSION")
       }
-      const { entity } = params
-      if(entity===""){
+      const { entity_name } = params
+      if(entity_name===""){
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
-      const [{id, schema }] = await sql<{id:string, name:string, project:string, schema:Record<string,string>}[]>` select * from entity where name=${entity} and project=${project}`
+      const [{id, schema }] = await sql<{id:string, name:string, project:string, schema:Record<string,string>}[]>` select * from entity where name=${entity_name} and project=${project}`
       if(!id){
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }
