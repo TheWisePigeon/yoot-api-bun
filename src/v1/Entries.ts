@@ -1,7 +1,6 @@
 import Elysia from "elysia";
-import { ApiKey, Permission, TypeParse, HttpResponse } from "../utils";
+import { ApiKey, Permission, HttpResponse } from "../utils";
 import sql from "../db";
-import { z } from "zod";
 import { FileBlob } from "bun";
 import { MEDIA_API_URL } from "../config";
 
@@ -79,7 +78,6 @@ const entries_v1 = (app: Elysia) => app
       }
       let received_entry_value = body as Record<string, string|FileBlob>
       const field_names = Object.keys(received_entry_value)
-      const field_values = Object.values(received_entry_value)
       const valid_number_of_fields = field_names.length === Object.keys(schema).length
       const keys_match_schema = field_names.every(
         field => Object.keys(schema).includes(field)
