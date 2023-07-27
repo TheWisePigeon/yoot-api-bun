@@ -149,6 +149,97 @@ const entries_v1 = (app: Elysia) => app
       return HttpResponse(500)
     }
   })
+  .put('/entities/:entity_name/entries/:entry_id', async ({ body, request, store, params })=>{
+    try {
+      const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
+      if (content_type !== "multipart/form-data") {
+        return HttpResponse(415, "ERR_CONT_TYPE")
+      }
+      const { api_key: { permissions, project } } = store
+      const parsed_permissions = JSON.parse(permissions) as Permission
+      if (!parsed_permissions.write_permission) {
+        return HttpResponse(403, "ERR_WRITE_PERMISSION")
+      }
+      const { entity_name, entry_id } = params
+      if (entity_name === "") {
+        return HttpResponse(400, "ERR_BAD_REQUEST")
+      }
+      const [{ id, schema }] = await sql<{ id: string, name: string, project: string, schema: Record<string, string> }[]>` select * from entity where name=${entity_name} and project=${project}`
+      if (!id) {
+        return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
+      }
+      const [entry] = await sql<{id:string, entity:string, value:Record<string, string>}[]>`select from entry where id=${entry_id}`
+      if(!entry){
+        return HttpResponse(400, "ERR_RESOURCE_NOT_FOUND")
+      }
+      let received_entry_value = body as Record<string, string | FileBlob>
+      const field_names = Object.keys(received_entry_value)
+      const keys_match_schema = field_names.every(
+        field => Object.keys(schema).includes(field)
+      )
+      if (!keys_match_schema) {
+        return HttpResponse(400, "ERR_BAD_REQUEST")
+      }
+      const fields = Object.entries(schema)
+      let entry_value: Record<string, string> = {}
+      for (const [field_name, field_type] of fields) {
+        const data = received_entry_value[field_name]
+        if (field_type === "Text") {
+          if (typeof data !== "string") {
+            return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
+          }
+          entry_value[field_name] = data
+        }
+        if (field_type === "Number") {
+          if (typeof data !== "number") {
+            return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
+          }
+          entry_value[field_name] = data
+        }
+        if (field_type === "Boolean") {
+          if (typeof data !== "boolean") {
+            return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
+          }
+          entry_value[field_name] = data
+        }
+        if (field_type === "Image") {
+          try {
+            const image = data as FileBlob
+            if(!image.type){
+              return HttpResponse(400, "ERR_EXPECTED_IMAGE")
+            }
+            const image_extension = image.type.split("/")[1]
+            const form_data = new FormData()
+            form_data.append('file_extension', image_extension)
+            form_data.append('file_data', image)
+            const response = await fetch(
+              MEDIA_API_URL,
+              {
+                method: "POST",
+                body: form_data
+              }
+            )
+            if (response.status !== 200) {
+              return HttpResponse(500, "ERR_IMAGE_UPLOAD")
+            }
+            const { url } = await response.json() as { url: string }
+            entry_value[field_name] = url
+          } catch (err) {
+            console.log(err)
+            return HttpResponse(500)
+          }
+        }
+      }
+      let new_value = { ...entry.value, ...entry_value }
+      console.log(new_value)
+      await sql` 
+        update entry set value=${sql.json(new_value)} where id=${entry.id}
+      `
+      return HttpResponse(200)
+    } catch (err) {
+      return HttpResponse(500)
+    }
+  })
 
 
 export default entries_v1
