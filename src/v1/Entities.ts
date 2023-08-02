@@ -15,7 +15,7 @@ const entities_v1 = (app: Elysia) => app
       const entities = await sql` select * from entity where project=${project}`
       return HttpResponse(
         200,
-        JSON.stringify({ data: entities })
+        JSON.stringify(entities)
       )
     } catch (err) {
       console.log(`Error while getting list of entities ${err}`)
@@ -87,7 +87,7 @@ const entities_v1 = (app: Elysia) => app
       if (TypeParse(body, z.object({ name: z.string() }))) {
         const [potential_duplicate] = await sql` select name from entity where name=${body.name} and project=${project}`
         if(potential_duplicate){
-          return HttpResponse(409, "ERR_CONFLICT")
+          return HttpResponse(409, "ERR_DUPLICATE")
         }
         await sql` update entity set name=${body.name} where id=${targetted_entity.id}`
         return HttpResponse(200)

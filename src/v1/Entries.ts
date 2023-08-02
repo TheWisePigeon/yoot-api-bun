@@ -9,7 +9,7 @@ const setup = (app: Elysia) => app
 
 const entries_v1 = (app: Elysia) => app
   .use(setup)
-  .get('/entities/:entity_name/entries', async ({ params, store }) => {
+  .get('/entities/:entity_name/entries', async ({ params, store, query }) => {
     try {
       const { api_key: { project } } = store
       const { entity_name } = params
@@ -72,7 +72,9 @@ const entries_v1 = (app: Elysia) => app
       if (entity_name === "") {
         return HttpResponse(400, "ERR_BAD_REQUEST")
       }
-      const [{ id, schema }] = await sql<{ id: string, name: string, project: string, schema: Record<string, string> }[]>` select * from entity where name=${entity_name} and project=${project}`
+      const entity = await sql<{ id: string, name: string, project: string, schema: Record<string, string> }[]>` select * from entity where name=${entity_name} and project=${project}`
+      const id = entity[0].id
+      const schema = entity[0].schema
       if (!id) {
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }
@@ -100,13 +102,21 @@ const entries_v1 = (app: Elysia) => app
           entry_value[field_name] = data
         }
         if (field_type === "Number") {
-          if (typeof data !== "number") {
+          if (typeof data !== "string") {
+            return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
+          }
+          const conversion_result = Number(data)
+          if(!conversion_result ){
             return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
           }
           entry_value[field_name] = data
         }
         if (field_type === "Boolean") {
-          if (typeof data !== "boolean") {
+          if (typeof data !== "string") {
+            return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
+          }
+          const conversion_result = JSON.parse(data)
+          if( typeof conversion_result!=="boolean" ){
             return HttpResponse(400, "ERR_WRONG_FIELD_TYPE")
           }
           entry_value[field_name] = data
@@ -114,7 +124,7 @@ const entries_v1 = (app: Elysia) => app
         if (field_type === "Image") {
           try {
             const image = data as FileBlob
-            if(!image.type){
+            if (!image.type) {
               return HttpResponse(400, "ERR_EXPECTED_IMAGE")
             }
             const image_extension = image.type.split("/")[1]
@@ -146,10 +156,11 @@ const entries_v1 = (app: Elysia) => app
       return HttpResponse(201)
 
     } catch (err) {
+      console.log(err)
       return HttpResponse(500)
     }
   })
-  .put('/entities/:entity_name/entries/:entry_id', async ({ body, request, store, params })=>{
+  .put('/entities/:entity_name/entries/:entry_id', async ({ body, request, store, params }) => {
     try {
       const content_type = (request.headers.get("Content-Type") as string).split(";")[0]
       if (content_type !== "multipart/form-data") {
@@ -168,8 +179,8 @@ const entries_v1 = (app: Elysia) => app
       if (!id) {
         return HttpResponse(404, "ERR_RESOURCE_NOT_FOUND")
       }
-      const [entry] = await sql<{id:string, entity:string, value:Record<string, string>}[]>`select from entry where id=${entry_id}`
-      if(!entry){
+      const [entry] = await sql<{ id: string, entity: string, value: Record<string, string> }[]>`select from entry where id=${entry_id}`
+      if (!entry) {
         return HttpResponse(400, "ERR_RESOURCE_NOT_FOUND")
       }
       let received_entry_value = body as Record<string, string | FileBlob>
@@ -205,7 +216,7 @@ const entries_v1 = (app: Elysia) => app
         if (field_type === "Image") {
           try {
             const image = data as FileBlob
-            if(!image.type){
+            if (!image.type) {
               return HttpResponse(400, "ERR_EXPECTED_IMAGE")
             }
             const image_extension = image.type.split("/")[1]
