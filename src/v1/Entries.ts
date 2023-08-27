@@ -9,7 +9,7 @@ const setup = (app: Elysia) => app
 
 const entries_v1 = (app: Elysia) => app
   .use(setup)
-  .get('/entities/:entity_name/entries', async ({ params, store, query }) => {
+  .get('/entities/:entity_name/entries', async ({ params, store }) => {
     try {
       const { api_key: { project } } = store
       const { entity_name } = params
@@ -23,9 +23,7 @@ const entries_v1 = (app: Elysia) => app
       const entries = await sql` select * from entry where entity=${targetted_entity.id}`
       return HttpResponse(
         200,
-        JSON.stringify({
-          data: entries
-        })
+        JSON.stringify(entries)
       )
     } catch (err) {
       console.log(`Error while fetching entries in entity ${err}`)
